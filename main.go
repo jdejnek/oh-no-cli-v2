@@ -5,53 +5,97 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
-type model struct {
-	choices  []string         // which item is selected
-	cursor   int              // which item cursor is pointing at
-	selected map[int]struct{} // which items are selected
+type Menu struct {
+	MainMenuItems  []string
+	Submenus       map[string][]string
+	CurrentSubmenu int
+	SelectedIndex  int
+	SubmenuIndex   int
 }
 
-func initialModel() model {
-	return model{
-		choices:  []string{"Sims", "Usage", "Connectors", "Webhooks", "Live Monitor"},
-		selected: make(map[int]struct{}),
+var redText = lipgloss.NewStyle().
+	Foreground(lipgloss.Color("#de1b62"))
+
+var header = lipgloss.NewStyle().Bold(true)
+
+const (
+	MainMenu int = iota
+	Submenu
+)
+
+func initialModel() Menu {
+	return Menu{
+		MainMenuItems: []string{"Sims", "Connectors", "Webhooks", "Live Monitor"},
+		Submenus: map[string][]string{
+			"Sims":         {"View", "Create", "Delete"},
+			"Connectors":   {"View", "Create", "Delete"},
+			"Webhooks":     {"View", "Create", "Delete"},
+			"Live Monitor": {"Traffic Monitor", "Network Logs", "Webhooks feed"},
+		},
+		CurrentSubmenu: -1,
+		SelectedIndex:  0,
+		SubmenuIndex:   0,
 	}
 }
 
-func (m model) Init() tea.Cmd {
+func (m Menu) Init() tea.Cmd {
 	return nil
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Menu) MoveSelection(direction int) Menu {
+	newIndex := m.SelectedIndex + direction
+	if newIndex < 0 {
+		newIndex = len(m.MainMenuItems) - 1
+	} else if newIndex >= len(m.MainMenuItems) {
+		newIndex = 0
+	}
+	m.SelectedIndex = newIndex
+	return m
+}
+
+func (m Menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "up", "k":
-			if m.cursor > 0 {
-				m.cursor--
+			if m.CurrentSubmenu == -1 {
+				return m.MoveSelection(-1), nil
+			} else {
+				return m.MoveSubmenuSelection(-1), nil
 			}
 		case "down", "j":
-			if m.cursor < len(m.choices)-1 {
-				m.cursor++
-			}
-		case "enter", " ", "l":
-			_, ok := m.selected[m.cursor]
-			if ok {
-				delete(m.selected, m.cursor)
+			if m.CurrentSubmenu == -1 {
+				return m.MoveSelection(1), nil
 			} else {
-				m.selected[m.cursor] = struct{}{}
+				return m.MoveSubmenuSelection(1), nil
+			}
+		case "enter":
+			if m.CurrentSubmenu == -1 {
+				m.CurrentSubmenu = m.SelectedIndex
+			} else {
+				m.CurrentSubmenu = -1
+				m.SubmenuIndex = 0
+			}
+			return m, nil
+		case "esc":
+			if m.CurrentSubmenu != -1 {
+				m.CurrentSubmenu = -1
+				m.SubmenuIndex = 0
+				return m, nil
 			}
 		}
 	}
 	return m, nil
 }
 
-func (m model) View() string {
-	s := `
+func (m Menu) View() string {
+	var output string
+	logo := fmt.Sprintln(redText.Render(`
     ____     __  __           _   __   ____           ______    __     ____
    / __ \   / / / /          / | / /  / __ \         / ____/   / /    /  _/
   / / / /  / /_/ /  ______  /  |/ /  / / / / ______ / /       / /     / /
@@ -59,24 +103,52 @@ func (m model) View() string {
  \____/  /_/ /_/          /_/ |_/   \____/         \____/   /_____//___/
 
 
-`
-	for i, choice := range m.choices {
+`))
+	output += logo
 
-		// is the cursor pointing at this chocice?
-		cursor := " "
-		if m.cursor == i {
-			cursor = "  "
-		}
-		// is this choice selected?
-		if _, ok := m.selected[i]; ok {
-			s += "Selected. "
-		}
+	if m.CurrentSubmenu == -1 {
+		// Main menu view
 
-		// render the row
-		s += fmt.Sprintf("%s %s\n", cursor, choice)
+		for i, item := range m.MainMenuItems {
+			if i == m.SelectedIndex {
+				selectedItem := fmt.Sprintf("  %s", item)
+				output += fmt.Sprintln(redText.Render(selectedItem))
+			} else {
+				output += fmt.Sprintf(" %s\n", item)
+			}
+		}
+		output += "\n\nPress 'enter' to select an option, 'q' to quit"
+	} else {
+		// Submenu view
+		submenuKey := m.MainMenuItems[m.CurrentSubmenu]
+		submenuItems := m.Submenus[submenuKey]
+
+		submenuTitle := fmt.Sprintf(" %s", submenuKey)
+		output += fmt.Sprintln(header.Render(submenuTitle))
+		for i, item := range submenuItems {
+			if i == m.SubmenuIndex {
+				selectedItem := fmt.Sprintf("  %s", item)
+				output += fmt.Sprintln(redText.Render(selectedItem))
+			} else {
+				output += fmt.Sprintf(" %s\n", item)
+			}
+		}
+		output += "\n\nPress 'esc' to go back to main menu, 'q' to quit"
 	}
-	s += "\n\nPress q to quit."
-	return s
+	return output
+}
+
+func (m Menu) MoveSubmenuSelection(direction int) Menu {
+	submenuKey := m.MainMenuItems[m.CurrentSubmenu]
+	submenuItems := m.Submenus[submenuKey]
+	newIndex := m.SubmenuIndex + direction
+	if newIndex < 0 {
+		newIndex = len(submenuItems) - 1
+	} else if newIndex >= len(submenuItems) {
+		newIndex = 0
+	}
+	m.SubmenuIndex = newIndex
+	return m
 }
 
 func main() {
