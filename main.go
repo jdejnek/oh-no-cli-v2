@@ -17,7 +17,7 @@ type Menu struct {
 }
 
 var redText = lipgloss.NewStyle().
-	Foreground(lipgloss.Color("#de1b62"))
+	Foreground(lipgloss.Color("86"))
 
 var header = lipgloss.NewStyle().Bold(true)
 
@@ -88,6 +88,8 @@ func (m Menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.SubmenuIndex = 0
 				return m, nil
 			}
+		case "s":
+			return NewModel(), nil
 		}
 	}
 	return m, nil
@@ -111,10 +113,10 @@ func (m Menu) View() string {
 
 		for i, item := range m.MainMenuItems {
 			if i == m.SelectedIndex {
-				selectedItem := fmt.Sprintf("  %s", item)
+				selectedItem := fmt.Sprintf(" %s", item)
 				output += fmt.Sprintln(redText.Render(selectedItem))
 			} else {
-				output += fmt.Sprintf(" %s\n", item)
+				output += fmt.Sprintf("%s\n", item)
 			}
 		}
 		output += "\n\nPress 'enter' to select an option, 'q' to quit"
@@ -123,14 +125,14 @@ func (m Menu) View() string {
 		submenuKey := m.MainMenuItems[m.CurrentSubmenu]
 		submenuItems := m.Submenus[submenuKey]
 
-		submenuTitle := fmt.Sprintf(" %s", submenuKey)
+		submenuTitle := fmt.Sprintf("%s", submenuKey)
 		output += fmt.Sprintln(header.Render(submenuTitle))
 		for i, item := range submenuItems {
 			if i == m.SubmenuIndex {
-				selectedItem := fmt.Sprintf("  %s", item)
+				selectedItem := fmt.Sprintf(" %s", item)
 				output += fmt.Sprintln(redText.Render(selectedItem))
 			} else {
-				output += fmt.Sprintf(" %s\n", item)
+				output += fmt.Sprintf("%s\n", item)
 			}
 		}
 		output += "\n\nPress 'esc' to go back to main menu, 'q' to quit"
