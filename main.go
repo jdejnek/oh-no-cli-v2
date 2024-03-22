@@ -33,7 +33,7 @@ func initialModel() Menu {
 			"Sims":         {"View", "Create", "Delete"},
 			"Connectors":   {"View", "Create", "Delete"},
 			"Webhooks":     {"View", "Create", "Delete"},
-			"Live Monitor": {"Traffic Monitor", "Network Logs", "Webhooks feed"},
+			"Live Monitor": {"Traffic Monitor", "Network Logs", "Signalling Logs"},
 		},
 		CurrentSubmenu: -1,
 		SelectedIndex:  0,
@@ -78,8 +78,9 @@ func (m Menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.CurrentSubmenu == -1 {
 				m.CurrentSubmenu = m.SelectedIndex
 			} else {
-				m.CurrentSubmenu = -1
-				m.SubmenuIndex = 0
+				// m.CurrentSubmenu = -1
+				// m.SubmenuIndex = 0
+				fmt.Println(m.CurrentSubmenu)
 			}
 			return m, nil
 		case "esc":
@@ -103,7 +104,6 @@ func (m Menu) View() string {
   / / / /  / /_/ /  ______  /  |/ /  / / / / ______ / /       / /     / /
  / /_/ /  / __  /  /_____/ / /|  /  / /_/ / /_____// /___    / /___ _/ /
  \____/  /_/ /_/          /_/ |_/   \____/         \____/   /_____//___/
-
 
 `))
 	output += logo

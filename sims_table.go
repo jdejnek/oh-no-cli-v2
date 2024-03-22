@@ -26,9 +26,7 @@ var (
 	styleSubtle = lipgloss.NewStyle().Foreground(lipgloss.Color("#888"))
 
 	styleBase = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#ffffff")).
-			BorderForeground(lipgloss.Color("#9c8922")).
-			Align(lipgloss.Left)
+			BorderForeground(lipgloss.Color("240"))
 )
 
 type Model struct {
@@ -56,7 +54,7 @@ func genRows(columnCount int, rowCount int) []table.Row {
 			columnKeyIPV4:      sim.Ipv4,
 			columnKeyMCC:       sim.Mcc,
 			columnKeyMNC:       sim.Mnc,
-		}).WithStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Padding())
+		})
 		rows = append(rows, row)
 	}
 	return rows
@@ -64,20 +62,20 @@ func genRows(columnCount int, rowCount int) []table.Row {
 
 func genTable(columnCount int, rowCount int) table.Model {
 	columns := []table.Column{
-		table.NewColumn(columnKeyID, "id", 12),
+		table.NewColumn(columnKeyID, "id", 12).WithFiltered(true),
 		table.NewColumn(columnKeyStatus, "online", 8),
 		table.NewColumn(columnKeyType, "softsim", 8),
-		table.NewColumn(columnKeyLabel, "label", 14),
-		table.NewColumn(columnKeyICCID, "iccid", 24),
-		table.NewColumn(columnKeyConnector, "connector", 16),
-		table.NewColumn(columnKeyIPV4, "ipv4", 12),
-		table.NewColumn(columnKeyMCC, "mcc", 8),
-		table.NewColumn(columnKeyMNC, "mnc", 8),
+		table.NewColumn(columnKeyLabel, "label", 14).WithFiltered(true),
+		table.NewColumn(columnKeyICCID, "iccid", 24).WithFiltered(true),
+		table.NewColumn(columnKeyConnector, "connector", 16).WithFiltered(true),
+		table.NewColumn(columnKeyIPV4, "ipv4", 14).WithFiltered(true),
+		table.NewColumn(columnKeyMCC, "mcc", 8).WithFiltered(true),
+		table.NewColumn(columnKeyMNC, "mnc", 8).WithFiltered(true),
 	}
 
 	rows := genRows(columnCount, rowCount)
 
-	return table.New(columns).WithRows(rows).HeaderStyle(lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#c4ac21")))
+	return table.New(columns).WithRows(rows).BorderRounded().Filtered(true)
 }
 
 func NewModel() Model {
