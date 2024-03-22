@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"strings"
 
@@ -32,6 +33,9 @@ var (
 type Model struct {
 	tableDefault table.Model
 	rowCount     int
+
+	columnSortKey string
+	sortDirection string
 }
 
 func genRows(columnCount int, rowCount int) []table.Row {
@@ -115,12 +119,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "u":
 			m.tableDefault = m.tableDefault.WithPageSize(m.tableDefault.PageSize() - 1)
 
-		case "i":
+		case "o":
 			m.tableDefault = m.tableDefault.WithPageSize(m.tableDefault.PageSize() + 1)
 
 		case "r":
 			m.tableDefault = m.tableDefault.WithCurrentPage(rand.Intn(m.tableDefault.MaxPages()) + 1)
 
+		case "i":
+			m.columnSortKey = columnKeyID
+			m.tableDefault = m.tableDefault.SortByAsc(m.columnSortKey)
+		case "I":
+			m.columnSortKey = columnKeyID
+			m.tableDefault = m.tableDefault.SortByDesc(m.columnSortKey)
+
+		case "enter":
+			selectedId := m.tableDefault.HighlightedRow().Data[columnKeyID]
+			selectedSim := http_client.CallApiWithPath("GET", "/sims/", fmt.Sprintf("%v", selectedId))
+			fmt.Sprintln(selectedSim)
 		case "z":
 			if m.rowCount < 10 {
 				break
@@ -143,13 +158,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() string {
 	body := strings.Builder{}
-	pad := lipgloss.NewStyle().Padding(1).Foreground(lipgloss.Color("#43e06d"))
 
-	tables := []string{
-		lipgloss.JoinVertical(lipgloss.Center, "Sims", pad.Render(m.tableDefault.View())),
-	}
+	helptext := fmt.Sprintln("\n\n'/' to search table\n'I' to sort by id (asc)\n'i' to sort by id (desc)\n'q' to quit")
 
-	body.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, tables...))
-
+	body.WriteString(m.tableDefault.View())
+	body.WriteString(helptext)
 	return body.String()
 }
