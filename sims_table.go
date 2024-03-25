@@ -114,7 +114,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "esc", "q":
+		case "ctrl+c", "q":
 			cmds = append(cmds, tea.Quit)
 		case "u":
 			m.tableDefault = m.tableDefault.WithPageSize(m.tableDefault.PageSize() - 1)
@@ -159,8 +159,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	body := strings.Builder{}
 
+	ansiHeader := fmt.Sprintln(coloredText.Render(`
+   _____    _
+  / ___/   (_)   ____ ___    _____
+  \__ \   / /   / __ '__ \  / ___/
+ ___/ /  / /   / / / / / / (__  )
+/____/  /_/   /_/ /_/ /_/ /____/
+`))
+
 	helptext := fmt.Sprintln("\n\n'/' to search table\n'I' to sort by id (asc)\n'i' to sort by id (desc)\n'q' to quit")
 
+	body.WriteString(ansiHeader)
 	body.WriteString(m.tableDefault.View())
 	body.WriteString(helptext)
 	return body.String()

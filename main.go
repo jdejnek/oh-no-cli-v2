@@ -16,7 +16,7 @@ type Menu struct {
 	SubmenuIndex   int
 }
 
-var redText = lipgloss.NewStyle().
+var coloredText = lipgloss.NewStyle().
 	Foreground(lipgloss.Color("86"))
 
 var header = lipgloss.NewStyle().Bold(true)
@@ -74,16 +74,16 @@ func (m Menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				return m.MoveSubmenuSelection(1), nil
 			}
-		case "enter":
+		case "enter", "l", "right":
 			if m.CurrentSubmenu == -1 {
 				m.CurrentSubmenu = m.SelectedIndex
 			} else {
 				// m.CurrentSubmenu = -1
 				// m.SubmenuIndex = 0
-				fmt.Println(m.CurrentSubmenu)
+				fmt.Println(m.Submenus[fmt.Sprint(m.SubmenuIndex)])
 			}
 			return m, nil
-		case "esc":
+		case "left", "h":
 			if m.CurrentSubmenu != -1 {
 				m.CurrentSubmenu = -1
 				m.SubmenuIndex = 0
@@ -98,7 +98,7 @@ func (m Menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Menu) View() string {
 	var output string
-	logo := fmt.Sprintln(redText.Render(`
+	logo := fmt.Sprintln(coloredText.Render(`
     ____     __  __           _   __   ____           ______    __     ____
    / __ \   / / / /          / | / /  / __ \         / ____/   / /    /  _/
   / / / /  / /_/ /  ______  /  |/ /  / / / / ______ / /       / /     / /
@@ -114,7 +114,7 @@ func (m Menu) View() string {
 		for i, item := range m.MainMenuItems {
 			if i == m.SelectedIndex {
 				selectedItem := fmt.Sprintf(" %s", item)
-				output += fmt.Sprintln(redText.Render(selectedItem))
+				output += fmt.Sprintln(coloredText.Render(selectedItem))
 			} else {
 				output += fmt.Sprintf("%s\n", item)
 			}
@@ -130,12 +130,12 @@ func (m Menu) View() string {
 		for i, item := range submenuItems {
 			if i == m.SubmenuIndex {
 				selectedItem := fmt.Sprintf(" %s", item)
-				output += fmt.Sprintln(redText.Render(selectedItem))
+				output += fmt.Sprintln(coloredText.Render(selectedItem))
 			} else {
 				output += fmt.Sprintf("%s\n", item)
 			}
 		}
-		output += "\n\nPress 'esc' to go back to main menu, 'q' to quit"
+		output += "\n\nPress left or 'h' to go back, 'q' to quit"
 	}
 	return output
 }

@@ -103,21 +103,6 @@ func CallApiWithParams(method string, path string, queryParams QueryParams) []Si
 
 	data := Response{}
 	json.NewDecoder(resp.Body).Decode(&data)
-	//
-	// for _, sim := range data.Sims {
-	// 	formattedSim := make(map[string]string)
-	// 	formattedSim[id]
-	// }
-
-	// decoder := json.NewDecoder(resp.Body)
-	//
-	// var data map[string]interface{}
-	// decoder.Decode(&data)
-	// sims := data["sims"]
-	//
-	// for _, sim := range data {
-	// 	fmt.Println(sim)
-	// }
 
 	return data.Sims
 }
